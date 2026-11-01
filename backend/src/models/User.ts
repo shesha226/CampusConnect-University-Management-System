@@ -1,50 +1,56 @@
 import mongoose, { Schema, type InferSchemaType } from "mongoose";
 
-const userSchema = new Schema({
-    username: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 3,
-        maxlength: 30,
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
-        match: [
-            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-            "Please add a valid email",
-        ],
-    },
-    role: {
-        type: String,
-        enum: ["student", "teacher", "admin"],
-        default: "student",
-        required: true,
-    },
-   
-    isActive: {
-        type: Boolean,
-        default: true,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now,
-    },
-}, {
-    timestamps: true,
-});
+const userSchema = new Schema(
+    {
+        username: {
+            type: String,
+            required: true,
+            trim: true,
+            minlength: 3,
+            maxlength: 30,
+        },
 
-export type User = InferSchemaType<typeof userSchema>;
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            lowercase: true,
+            match: [
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                "Please add a valid email",
+            ],
+        },
 
-const  User = mongoose.models.User || mongoose.model<User>("User", userSchema);
+        password: {
+            type: String,
+            required: true,
+            minlength: 8,
+            select: false,
+        },
+
+        role: {
+            type: String,
+            enum: ["student", "teacher", "admin"],
+            default: "student",
+            required: true,
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+    },
+    {
+        timestamps: true,
+        versionKey: false,
+    }
+);
+
+export type UserType = InferSchemaType<typeof userSchema>;
+
+const User =
+    mongoose.models.User ||
+    mongoose.model<UserType>("User", userSchema);
 
 export default User;
-    

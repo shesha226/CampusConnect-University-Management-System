@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import bycrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
 import type { User as UserType } from "../models/User";
@@ -60,7 +60,7 @@ export async function register(req: Request, res: Response) {
         message: "User with this email already exists",
       });
         }
-        const hashedPassword = await bycrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const newUser = await User.create({
             username,
@@ -127,7 +127,7 @@ export async function login(req: Request, res: Response) {
             });
         }
 
-        const isPasswordValid = await bycrypt.compare(password, user.password);
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return res.status(401).json({
                 success: false,

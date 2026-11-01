@@ -1,15 +1,19 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import { env } from "./environment";
 
-export async function connectToDatabase(): Promise<void> {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/mydatabase';
+const connectDatabase = async (): Promise<void> => {
+    try {
+        await mongoose.connect(env.MONGODB_URI, {
+            maxPoolSize: 10,
+            serverSelectionTimeoutMS: 5000,
+        });
 
-    if(!mongoUri) {
-        throw new Error("MongoDB URI is not defined in environment variables.");
+        console.log("MongoDB connected successfully");
+
+    } catch (error) {
+        console.error("MongoDB connection failed:", error);
+        process.exit(1);
     }
+};
 
-    await mongoose.connect(mongoUri, {
-        serverSelectionTimeoutMS: 5000,
-    });
-
-    console.log('Connected to MongoDB');
-}
+export default connectDatabase;

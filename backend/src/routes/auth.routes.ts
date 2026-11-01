@@ -1,15 +1,14 @@
-
 import { Router } from "express";
 import {
   register,
   login,
   logout,
 } from "../controllers/auth.controller";
-import {
-  authenticate,
-  type AuthPayload,
-} from "../middleware/auth";
+import { authenticate } from "../middleware/auth";
 import User from "../models/User";
+import { clearAuthCookie } from "../utils/cookie";
+import AppError from "../utils/AppError";
+import asyncHandler from "../utils/asyncHandler";
 
 const router = Router();
 
@@ -17,42 +16,37 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
 
-router.get("/me", authenticate, async (_req, res) => {
-  try {
-    const auth = res.locals.auth as AuthPayload;
+router.get(
+  "/me",
+  authenticate,
+  asyncHandler(async (_req, res) => {
+    const auth = res.locals.auth;
 
-    const user = await User.findById(auth.sub)
-      .select("name email role isActive");
+if (!auth) {
+  throw new AppError("Authentication required", 401);
+}
+
+    const user = await User.findById(auth.sub).select(
+      "username email role isActive"
+    );
 
     if (!user || !user.isActive) {
-      res.clearCookie("campusconnect_token", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        path: "/",
-      });
+      clearAuthCookie(res);
 
-      return res.status(401).json({
-        success: false,
-        message: "User session is no longer active",
-      });
+      throw new AppError("User session is no longer active", 401);
     }
 
     return res.status(200).json({
       success: true,
-      user: {
+      message: "User details retrieved successfully",
+      data: {
         id: user._id,
-        name: user.name,
+        username: user.username,
         email: user.email,
         role: user.role,
       },
     });
-  } catch {
-    return res.status(500).json({
-      success: false,
-      message: "Could not retrieve user details",
-    });
-  }
-});
+  })
+);
 
 export default router;

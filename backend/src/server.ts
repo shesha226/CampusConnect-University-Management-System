@@ -1,22 +1,21 @@
-
-import "dotenv/config";
 import app from "./app";
-import { connectToDatabase } from "./config/database";
+import connectDatabase from "./config/database";
+import { env } from "./config/environment";
 
-const PORT = Number(process.env.PORT) || 5000;
-
-async function startServer(): Promise<void> {
+const startServer = async (): Promise<void> => {
   try {
-    await connectToDatabase();
+    await connectDatabase();
 
-    app.listen(PORT, () => {
-      console.log(`CampusConnect API: http://localhost:${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/api/health`);
+    app.listen(env.PORT, () => {
+      console.log(
+        `CampusConnect API running on http://localhost:${env.PORT}`
+      );
+      console.log(`Environment: ${env.NODE_ENV}`);
     });
   } catch (error) {
-    console.error("Failed to start CampusConnect backend:", error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
-}
+};
 
 void startServer();

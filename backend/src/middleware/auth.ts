@@ -1,78 +1,67 @@
-
 import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+
+import { verifyAccessToken } from "../utils/jwt";
+import { AUTH_COOKIE_NAME } from "../utils/cookie";
+import AppError from "../utils/AppError";
 
 export interface AuthPayload {
-  sub: string;
-  role: "Admin" | "Lecturer" | "Student";
+    sub: string;
+    role: "student" | "teacher" | "admin";
 }
 
 export function authenticate(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  const token = req.cookies?.campusconnect_token;
+    req: Request,
+    res: Response,
+    next: NextFunction
+): void {
+    const token = req.cookies?.[AUTH_COOKIE_NAME];
 
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: "Authentication required",
-    });
-  }
-
-  try {
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret || secret.length < 32) {
-      throw new Error("JWT secret is not configured");
+    if (!token) {
+        return next(
+            new AppError("Authentication required", 401)
+        );
     }
 
-    const decoded = jwt.verify(token, secret);
+    try {
+        const decoded = verifyAccessToken(token);
 
-    if (
-      typeof decoded === "string" ||
-      typeof decoded.sub !== "string" ||
-      !["Admin", "Lecturer", "Student"].includes(
-        String(decoded.role)
-      )
-    ) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid authentication token",
-      });
+        res.locals.auth = decoded;
+
+        next();
+
+    } catch {
+        next(
+            new AppError("Invalid or expired session", 401)
+        );
     }
-
-    res.locals.auth = decoded as AuthPayload;
-    next();
-  } catch {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid or expired session",
-    });
-  }
 }
 
 export function allowRoles(
-  ...roles: AuthPayload["role"][]
+    ...roles: AuthPayload["role"][]
 ) {
-  return (_req: Request, res: Response, next: NextFunction) => {
-    const auth = res.locals.auth as AuthPayload | undefined;
+    return (
+        _req: Request,
+        res: Response,
+        next: NextFunction
+    ): void => {
 
-    if (!auth) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-      });
-    }
+        const auth = res.locals.auth as AuthPayload | undefined;
 
-    if (!roles.includes(auth.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "You do not have permission to perform this action",
-      });
-    }
+        if (!auth) {
+            return next(
+                new AppError("Authentication required", 401)
+            );
+        }
 
-    next();
-  };
+        if (!roles.includes(auth.role)) {
+            return next(
+                new AppError(
+                    "You do not have permission to perform this action",
+                    403
+                )
+            );
+        }
+
+        next();
+    };
 }
