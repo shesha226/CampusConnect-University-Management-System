@@ -1,20 +1,24 @@
-import User from "../models/User";
 
+import User, { type UserType } from "../models/User";
 
+// Find user by email without password
 export const findUserByEmail = async (email: string) => {
-    return await User.findOne({ email });
+  return User.findOne({ email });
 };
 
-export const findUserById = async(id: string) => {
-    return await User.findById(id);
-}
+// Find user by email including password (Login only)
+export const findUserByEmailWithPassword = async (email: string) => {
+  return User.findOne({ email }).select("+password");
+};
 
+// Find user by ID
+export const findUserById = async (id: string) => {
+  return User.findById(id);
+};
 
-export const createUser = async (userData: {
-    username: string;
-    email: string;
-    password: string;
-    role: string;
-}) => {
-    return await User.create(userData);
+// Create a new user
+export const createUser = async (
+  userData: Pick<UserType, "username" | "email" | "password" | "role">
+) => {
+  return User.create(userData);
 };

@@ -2,7 +2,6 @@ import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
-import type { User as UserType } from "../models/User";
 
 import { loginSchema, registerSchema } from "../validators/auth.validators";
 const ONE_DAY = 24 * 60 * 60; // 1 day in seconds
