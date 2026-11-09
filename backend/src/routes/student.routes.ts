@@ -44,7 +44,6 @@ router.patch(
   updateStudent
 );
 
-// Delete student
 router.delete(
   "/:id",
   validate(studentIdSchema),
